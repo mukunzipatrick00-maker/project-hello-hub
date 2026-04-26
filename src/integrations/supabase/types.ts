@@ -102,6 +102,7 @@ export type Database = {
           photo_url: string | null
           student_code: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           class_name: string
@@ -116,6 +117,7 @@ export type Database = {
           photo_url?: string | null
           student_code: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           class_name?: string
@@ -130,6 +132,7 @@ export type Database = {
           photo_url?: string | null
           student_code?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
