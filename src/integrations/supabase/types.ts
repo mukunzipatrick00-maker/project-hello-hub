@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      classes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          level: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          level?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          level?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marks: {
         Row: {
           created_at: string
@@ -58,6 +88,42 @@ export type Database = {
           },
         ]
       }
+      parent_messages: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          provider_sid: string | null
+          sent_by: string | null
+          status: string
+          student_id: string
+          to_phone: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_sid?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id: string
+          to_phone: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_sid?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id?: string
+          to_phone?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -99,6 +165,7 @@ export type Database = {
           gender: string | null
           id: string
           parent_contact: string | null
+          parent_phone: string | null
           photo_url: string | null
           student_code: string
           updated_at: string
@@ -114,6 +181,7 @@ export type Database = {
           gender?: string | null
           id?: string
           parent_contact?: string | null
+          parent_phone?: string | null
           photo_url?: string | null
           student_code: string
           updated_at?: string
@@ -129,6 +197,7 @@ export type Database = {
           gender?: string | null
           id?: string
           parent_contact?: string | null
+          parent_phone?: string | null
           photo_url?: string | null
           student_code?: string
           updated_at?: string
