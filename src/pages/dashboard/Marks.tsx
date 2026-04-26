@@ -73,7 +73,7 @@ const Marks = () => {
         toast.error("Score cannot exceed max score");
         return;
       }
-      const { error } = await supabase.from("marks").insert({ ...parsed.data, entered_by: user?.id });
+      const { error } = await supabase.from("marks").insert([{ ...parsed.data, entered_by: user?.id }]);
       if (error) throw error;
       toast.success("Mark recorded!");
       setForm({ ...form, score: "" });

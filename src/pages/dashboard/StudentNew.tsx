@@ -58,10 +58,10 @@ const StudentNew = () => {
         toast.error(parsed.error.issues[0].message);
         return;
       }
-      const { error } = await supabase.from("students").insert({
+      const { error } = await supabase.from("students").insert([{
         ...parsed.data,
         created_by: user?.id,
-      });
+      }]);
       if (error) throw error;
       toast.success("Student registered!");
       navigate("/dashboard/students");

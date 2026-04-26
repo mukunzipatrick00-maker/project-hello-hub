@@ -77,7 +77,7 @@ const Auth = () => {
           toast.error(parsed.error.issues[0].message);
           return;
         }
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
         if (error) throw error;
         toast.success("Welcome back!");
         navigate("/dashboard");
