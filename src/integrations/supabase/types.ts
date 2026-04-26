@@ -102,6 +102,7 @@ export type Database = {
           photo_url: string | null
           student_code: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           class_name: string
@@ -116,6 +117,7 @@ export type Database = {
           photo_url?: string | null
           student_code: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           class_name?: string
@@ -130,6 +132,7 @@ export type Database = {
           photo_url?: string | null
           student_code?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -168,7 +171,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "head_master" | "secretary" | "teacher" | "patron" | "matron"
+      app_role:
+        | "head_master"
+        | "secretary"
+        | "teacher"
+        | "patron"
+        | "matron"
+        | "animation_patron"
+        | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -296,7 +306,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["head_master", "secretary", "teacher", "patron", "matron"],
+      app_role: [
+        "head_master",
+        "secretary",
+        "teacher",
+        "patron",
+        "matron",
+        "animation_patron",
+        "student",
+      ],
     },
   },
 } as const
