@@ -58,8 +58,15 @@ const StudentNew = () => {
         toast.error(parsed.error.issues[0].message);
         return;
       }
+      const { student_code, full_name, class_name, department, gender, date_of_birth, parent_contact } = parsed.data;
       const { error } = await supabase.from("students").insert([{
-        ...parsed.data,
+        student_code,
+        full_name,
+        class_name,
+        department,
+        gender,
+        date_of_birth,
+        parent_contact,
         created_by: user?.id,
       }]);
       if (error) throw error;
