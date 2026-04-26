@@ -11,6 +11,8 @@ import DashboardHome from "./pages/DashboardHome.tsx";
 import StudentsPage from "./pages/StudentsPage.tsx";
 import MarksPage from "./pages/MarksPage.tsx";
 import StaffPage from "./pages/StaffPage.tsx";
+import ClassesPage from "./pages/ClassesPage.tsx";
+import ReportsPage from "./pages/ReportsPage.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ const App = () => (
             <Route index element={<DashboardHome />} />
             <Route path="students" element={<StudentsPage />} />
             <Route path="marks" element={<MarksPage />} />
+            <Route path="classes" element={<ClassesPage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="staff" element={<StaffPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

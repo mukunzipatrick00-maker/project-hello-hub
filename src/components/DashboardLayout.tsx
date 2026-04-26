@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, ROLE_LABELS, hasAnyRole } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut, BookOpen, FileText } from "lucide-react";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -50,6 +50,16 @@ const DashboardLayout = () => {
           {canManageStudents && (
             <NavLink to="/dashboard/students" className={linkCls}>
               <GraduationCap size={16} /> Students
+            </NavLink>
+          )}
+          {canManageStudents && (
+            <NavLink to="/dashboard/classes" className={linkCls}>
+              <BookOpen size={16} /> Classes
+            </NavLink>
+          )}
+          {isStaff && (
+            <NavLink to="/dashboard/reports" className={linkCls}>
+              <FileText size={16} /> Reports
             </NavLink>
           )}
           {canManageStaff && (
