@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Student = {
@@ -24,17 +24,18 @@ type Student = {
 };
 type Klass = { id: string; name: string };
 
+const emptyForm = { full_name: "", student_code: "", class_name: "", department: "", gender: "", parent_contact: "", parent_phone: "" };
+
 const StudentsPage = () => {
   const { roles, user } = useAuth();
   const canEdit = hasAnyRole(roles, "head_master", "secretary");
+  const canDelete = hasAnyRole(roles, "head_master");
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Klass[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    full_name: "", student_code: "", class_name: "", department: "", gender: "", parent_contact: "", parent_phone: "",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ ...emptyForm });
 
-  // Message dialog
   const [msgOpen, setMsgOpen] = useState(false);
   const [msgStudent, setMsgStudent] = useState<Student | null>(null);
   const [msgBody, setMsgBody] = useState("");
@@ -54,9 +55,29 @@ const StudentsPage = () => {
     load();
   }, []);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const startAdd = () => {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setOpen(true);
+  };
+
+  const startEdit = (s: Student) => {
+    setEditingId(s.id);
+    setForm({
+      full_name: s.full_name,
+      student_code: s.student_code,
+      class_name: s.class_name,
+      department: s.department ?? "",
+      gender: s.gender ?? "",
+      parent_contact: s.parent_contact ?? "",
+      parent_phone: s.parent_phone ?? "",
+    });
+    setOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("students").insert({
+    const payload = {
       full_name: form.full_name,
       student_code: form.student_code,
       class_name: form.class_name,
@@ -64,11 +85,23 @@ const StudentsPage = () => {
       gender: form.gender || null,
       parent_contact: form.parent_contact || null,
       parent_phone: form.parent_phone || null,
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("students").update(payload).eq("id", editingId)
+      : await supabase.from("students").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success("Student registered");
+    toast.success(editingId ? "Student updated" : "Student registered");
     setOpen(false);
-    setForm({ full_name: "", student_code: "", class_name: "", department: "", gender: "", parent_contact: "", parent_phone: "" });
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    load();
+  };
+
+  const handleDelete = async (s: Student) => {
+    if (!confirm(`Delete student ${s.full_name}? This cannot be undone.`)) return;
+    const { error } = await supabase.from("students").delete().eq("id", s.id);
+    if (error) return toast.error(error.message);
+    toast.success("Student deleted");
     load();
   };
 
@@ -85,7 +118,6 @@ const StudentsPage = () => {
   const sendWhatsApp = async () => {
     if (!msgStudent || !msgStudent.parent_phone || !msgBody.trim()) return;
     const phone = msgStudent.parent_phone.replace(/[^\d]/g, "");
-    // Log it
     const { error } = await supabase.from("parent_messages").insert({
       student_id: msgStudent.id,
       to_phone: msgStudent.parent_phone,
@@ -94,7 +126,6 @@ const StudentsPage = () => {
       sent_by: user?.id,
     });
     if (error) toast.error(`Log failed: ${error.message}`);
-
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(msgBody)}`;
     window.open(url, "_blank");
     setMsgOpen(false);
@@ -109,41 +140,42 @@ const StudentsPage = () => {
           <p className="text-muted-foreground text-sm">{students.length} registered</p>
         </div>
         {canEdit && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button>Register student</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Register new student</DialogTitle></DialogHeader>
-              <form onSubmit={handleAdd} className="space-y-3">
-                <div><Label>Full name *</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
-                <div><Label>Student code *</Label><Input required value={form.student_code} onChange={(e) => setForm({ ...form, student_code: e.target.value })} /></div>
-                <div>
-                  <Label>Class *</Label>
-                  {classes.length > 0 ? (
-                    <Select value={form.class_name} onValueChange={(v) => setForm({ ...form, class_name: v })}>
-                      <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                      <SelectContent>
-                        {classes.map((c) => (
-                          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input required value={form.class_name} onChange={(e) => setForm({ ...form, class_name: e.target.value })} placeholder="No classes yet — type one" />
-                  )}
-                </div>
-                <div><Label>Department</Label><Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
-                <div><Label>Gender</Label><Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} /></div>
-                <div><Label>Parent contact (name/notes)</Label><Input value={form.parent_contact} onChange={(e) => setForm({ ...form, parent_contact: e.target.value })} /></div>
-                <div>
-                  <Label>Parent WhatsApp number (with country code, e.g. +250788...)</Label>
-                  <Input value={form.parent_phone} onChange={(e) => setForm({ ...form, parent_phone: e.target.value })} placeholder="+250788123456" />
-                </div>
-                <Button type="submit" className="w-full" disabled={!form.class_name}>Save</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={startAdd}>Register student</Button>
         )}
       </div>
+
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); setForm({ ...emptyForm }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingId ? "Edit student" : "Register new student"}</DialogTitle></DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div><Label>Full name *</Label><Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+            <div><Label>Student code *</Label><Input required value={form.student_code} onChange={(e) => setForm({ ...form, student_code: e.target.value })} /></div>
+            <div>
+              <Label>Class *</Label>
+              {classes.length > 0 ? (
+                <Select value={form.class_name} onValueChange={(v) => setForm({ ...form, class_name: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input required value={form.class_name} onChange={(e) => setForm({ ...form, class_name: e.target.value })} placeholder="No classes yet — type one" />
+              )}
+            </div>
+            <div><Label>Department</Label><Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
+            <div><Label>Gender</Label><Input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} /></div>
+            <div><Label>Parent contact (name/notes)</Label><Input value={form.parent_contact} onChange={(e) => setForm({ ...form, parent_contact: e.target.value })} /></div>
+            <div>
+              <Label>Parent WhatsApp number (with country code)</Label>
+              <Input value={form.parent_phone} onChange={(e) => setForm({ ...form, parent_phone: e.target.value })} placeholder="+250788123456" />
+            </div>
+            <Button type="submit" className="w-full" disabled={!form.class_name}>{editingId ? "Update" : "Save"}</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader><CardTitle>All students</CardTitle></CardHeader>
@@ -156,7 +188,7 @@ const StudentsPage = () => {
                 <TableHead>Class</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Parent</TableHead>
-                {canEdit && <TableHead>Action</TableHead>}
+                {canEdit && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -174,9 +206,19 @@ const StudentsPage = () => {
                   </TableCell>
                   {canEdit && (
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => openMessage(s)} disabled={!s.parent_phone}>
-                        <MessageCircle className="h-4 w-4 mr-1" /> Message
-                      </Button>
+                      <div className="flex gap-1 flex-wrap">
+                        <Button size="sm" variant="outline" onClick={() => openMessage(s)} disabled={!s.parent_phone}>
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(s)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {canDelete && (
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(s)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
@@ -200,9 +242,6 @@ const StudentsPage = () => {
             <Button className="w-full" onClick={sendWhatsApp}>
               <MessageCircle className="h-4 w-4 mr-2" /> Open in WhatsApp
             </Button>
-            <p className="text-xs text-muted-foreground">
-              This opens WhatsApp Web/app with the message pre-filled. Press send there to deliver.
-            </p>
           </div>
         </DialogContent>
       </Dialog>
