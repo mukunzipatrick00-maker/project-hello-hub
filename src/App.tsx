@@ -12,6 +12,7 @@ import StudentsPage from "./pages/StudentsPage.tsx";
 import MarksPage from "./pages/MarksPage.tsx";
 import StaffPage from "./pages/StaffPage.tsx";
 import ClassesPage from "./pages/ClassesPage.tsx";
+import TradesPage from "./pages/TradesPage.tsx";
 import ReportsPage from "./pages/ReportsPage.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="students" element={<StudentsPage />} />
             <Route path="marks" element={<MarksPage />} />
             <Route path="classes" element={<ClassesPage />} />
+            <Route path="trades" element={<TradesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="staff" element={<StaffPage />} />
           </Route>
