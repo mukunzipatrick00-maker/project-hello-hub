@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Mark = {
@@ -22,13 +23,17 @@ type Mark = {
 
 type Student = { id: string; full_name: string; student_code: string };
 
+const emptyForm = { student_id: "", subject: "", term: "Term 1", score: "", max_score: "100" };
+
 const MarksPage = () => {
   const { roles } = useAuth();
   const canEnter = hasAnyRole(roles, "head_master", "secretary", "teacher");
+  const canDelete = hasAnyRole(roles, "head_master");
   const [marks, setMarks] = useState<Mark[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ student_id: "", subject: "", term: "Term 1", score: "", max_score: "100" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ ...emptyForm });
 
   const load = async () => {
     const [m, s] = await Promise.all([
@@ -50,7 +55,25 @@ const MarksPage = () => {
     return s ? `${s.full_name} (${s.student_code})` : id.slice(0, 8);
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const startAdd = () => {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setOpen(true);
+  };
+
+  const startEdit = (m: Mark) => {
+    setEditingId(m.id);
+    setForm({
+      student_id: m.student_id,
+      subject: m.subject,
+      term: m.term,
+      score: String(m.score),
+      max_score: String(m.max_score),
+    });
+    setOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const score = Number(form.score);
     const max = Number(form.max_score);
@@ -58,17 +81,30 @@ const MarksPage = () => {
       return toast.error("Invalid score");
     }
     const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("marks").insert({
+    const payload = {
       student_id: form.student_id,
       subject: form.subject,
       term: form.term,
-      score, max_score: max,
+      score,
+      max_score: max,
       entered_by: u.user?.id,
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("marks").update(payload).eq("id", editingId)
+      : await supabase.from("marks").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success("Mark recorded");
+    toast.success(editingId ? "Mark updated" : "Mark recorded");
     setOpen(false);
-    setForm({ student_id: "", subject: "", term: "Term 1", score: "", max_score: "100" });
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    load();
+  };
+
+  const handleDelete = async (m: Mark) => {
+    if (!confirm(`Delete this mark for ${studentName(m.student_id)}?`)) return;
+    const { error } = await supabase.from("marks").delete().eq("id", m.id);
+    if (error) return toast.error(error.message);
+    toast.success("Mark deleted");
     load();
   };
 
@@ -79,45 +115,44 @@ const MarksPage = () => {
           <h1 className="text-3xl font-bold">Marks</h1>
           <p className="text-muted-foreground text-sm">{marks.length} recorded</p>
         </div>
-        {canEnter && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button>Enter marks</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Record a mark</DialogTitle></DialogHeader>
-              <form onSubmit={handleAdd} className="space-y-3">
-                <div>
-                  <Label>Student *</Label>
-                  <Select value={form.student_id} onValueChange={(v) => setForm({ ...form, student_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-                    <SelectContent>
-                      {students.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>{s.full_name} ({s.student_code})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Subject *</Label><Input required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /></div>
-                <div>
-                  <Label>Term *</Label>
-                  <Select value={form.term} onValueChange={(v) => setForm({ ...form, term: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Term 1">Term 1</SelectItem>
-                      <SelectItem value="Term 2">Term 2</SelectItem>
-                      <SelectItem value="Term 3">Term 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Score *</Label><Input type="number" required value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} /></div>
-                  <div><Label>Max</Label><Input type="number" value={form.max_score} onChange={(e) => setForm({ ...form, max_score: e.target.value })} /></div>
-                </div>
-                <Button type="submit" className="w-full" disabled={!form.student_id}>Save</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+        {canEnter && <Button onClick={startAdd}>Enter marks</Button>}
       </div>
+
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); setForm({ ...emptyForm }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingId ? "Edit mark" : "Record a mark"}</DialogTitle></DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <Label>Student *</Label>
+              <Select value={form.student_id} onValueChange={(v) => setForm({ ...form, student_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+                <SelectContent>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.full_name} ({s.student_code})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Subject *</Label><Input required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /></div>
+            <div>
+              <Label>Term *</Label>
+              <Select value={form.term} onValueChange={(v) => setForm({ ...form, term: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Term 1">Term 1</SelectItem>
+                  <SelectItem value="Term 2">Term 2</SelectItem>
+                  <SelectItem value="Term 3">Term 3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>Score *</Label><Input type="number" required value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} /></div>
+              <div><Label>Max</Label><Input type="number" value={form.max_score} onChange={(e) => setForm({ ...form, max_score: e.target.value })} /></div>
+            </div>
+            <Button type="submit" className="w-full" disabled={!form.student_id}>{editingId ? "Update" : "Save"}</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader><CardTitle>Marks</CardTitle></CardHeader>
@@ -130,6 +165,7 @@ const MarksPage = () => {
                 <TableHead>Term</TableHead>
                 <TableHead>Score</TableHead>
                 <TableHead>%</TableHead>
+                {canEnter && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -140,10 +176,24 @@ const MarksPage = () => {
                   <TableCell>{m.term}</TableCell>
                   <TableCell>{m.score} / {m.max_score}</TableCell>
                   <TableCell>{Math.round((Number(m.score) / Number(m.max_score)) * 100)}%</TableCell>
+                  {canEnter && (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => startEdit(m)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {canDelete && (
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(m)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {marks.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No marks yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={canEnter ? 6 : 5} className="text-center text-muted-foreground py-8">No marks yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
