@@ -7,42 +7,45 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-type Klass = { id: string; name: string; level: string | null; description: string | null };
+type Trade = { id: string; name: string };
+type Klass = { id: string; name: string; level: string | null; description: string | null; trade_id: string | null };
 
-const emptyForm = { name: "", level: "", description: "" };
+const emptyForm = { name: "", level: "", description: "", trade_id: "" };
 
 const ClassesPage = () => {
   const { roles, user } = useAuth();
   const canEdit = hasAnyRole(roles, "head_master", "secretary");
   const canDelete = hasAnyRole(roles, "head_master");
   const [classes, setClasses] = useState<Klass[]>([]);
+  const [trades, setTrades] = useState<Trade[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
 
   const load = async () => {
-    const { data, error } = await supabase.from("classes").select("*").order("name");
-    if (error) toast.error(error.message);
-    else setClasses((data ?? []) as Klass[]);
+    const [{ data: cls, error: e1 }, { data: trs, error: e2 }] = await Promise.all([
+      supabase.from("classes").select("*").order("name"),
+      supabase.from("trades").select("id, name").order("name"),
+    ]);
+    if (e1) toast.error(e1.message); else setClasses((cls ?? []) as Klass[]);
+    if (e2) toast.error(e2.message); else setTrades((trs ?? []) as Trade[]);
   };
 
   useEffect(() => {
-    document.title = "Classes | School Management";
+    document.title = "Classes | TVET School Management";
     load();
   }, []);
 
-  const startAdd = () => {
-    setEditingId(null);
-    setForm({ ...emptyForm });
-    setOpen(true);
-  };
+  const tradeName = (id: string | null) => trades.find((t) => t.id === id)?.name ?? "—";
 
+  const startAdd = () => { setEditingId(null); setForm({ ...emptyForm }); setOpen(true); };
   const startEdit = (c: Klass) => {
     setEditingId(c.id);
-    setForm({ name: c.name, level: c.level ?? "", description: c.description ?? "" });
+    setForm({ name: c.name, level: c.level ?? "", description: c.description ?? "", trade_id: c.trade_id ?? "" });
     setOpen(true);
   };
 
@@ -52,15 +55,14 @@ const ClassesPage = () => {
       name: form.name.trim(),
       level: form.level.trim() || null,
       description: form.description.trim() || null,
+      trade_id: form.trade_id || null,
     };
     const { error } = editingId
       ? await supabase.from("classes").update(payload).eq("id", editingId)
       : await supabase.from("classes").insert({ ...payload, created_by: user?.id });
     if (error) return toast.error(error.message);
     toast.success(editingId ? "Class updated" : "Class added");
-    setOpen(false);
-    setEditingId(null);
-    setForm({ ...emptyForm });
+    setOpen(false); setEditingId(null); setForm({ ...emptyForm });
     load();
   };
 
@@ -86,8 +88,22 @@ const ClassesPage = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>{editingId ? "Edit class" : "Add a new class"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div><Label>Name * (e.g. S1A)</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Level</Label><Input placeholder="e.g. Senior 1" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} /></div>
+            <div><Label>Name * (e.g. L3 SOD A)</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div>
+              <Label>Trade</Label>
+              <Select value={form.trade_id} onValueChange={(v) => setForm({ ...form, trade_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select a trade" /></SelectTrigger>
+                <SelectContent>
+                  {trades.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {trades.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">No trades yet. Add trades on the Trades page first.</p>
+              )}
+            </div>
+            <div><Label>Level</Label><Input placeholder="e.g. Level 3" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} /></div>
             <div><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <Button type="submit" className="w-full">{editingId ? "Update" : "Save"}</Button>
           </form>
@@ -101,6 +117,7 @@ const ClassesPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Trade</TableHead>
                 <TableHead>Level</TableHead>
                 <TableHead>Description</TableHead>
                 {canEdit && <TableHead>Actions</TableHead>}
@@ -110,6 +127,7 @@ const ClassesPage = () => {
               {classes.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell>{tradeName(c.trade_id)}</TableCell>
                   <TableCell>{c.level ?? "—"}</TableCell>
                   <TableCell>{c.description ?? "—"}</TableCell>
                   {canEdit && (
@@ -129,7 +147,7 @@ const ClassesPage = () => {
                 </TableRow>
               ))}
               {classes.length === 0 && (
-                <TableRow><TableCell colSpan={canEdit ? 4 : 3} className="text-center text-muted-foreground py-8">No classes yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={canEdit ? 5 : 4} className="text-center text-muted-foreground py-8">No classes yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
