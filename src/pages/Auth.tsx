@@ -155,16 +155,6 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label>Department</Label>
-                  <Select value={loginDept} onValueChange={setLoginDept}>
-                    <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                    <SelectContent>
-                      {DEPARTMENTS.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input id="login-email" type="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
