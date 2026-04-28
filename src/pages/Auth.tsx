@@ -27,6 +27,13 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [signupDept, setSignupDept] = useState<string>("");
 
+  // Student signup state
+  const [studentName, setStudentName] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentPassword, setStudentPassword] = useState("");
+  const [studentCode, setStudentCode] = useState("");
+  const [schoolCode, setSchoolCode] = useState("");
+
   useEffect(() => {
     document.title = "Login | School Management System";
     supabase.auth.getSession().then(({ data }) => {
@@ -95,6 +102,57 @@ const Auth = () => {
     toast.success("Account created. Please check your email to confirm, then ask the Head Master to assign your role.");
   };
 
+  const handleStudentSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // 1) Verify school code
+    const { data: schoolOk, error: scErr } = await (supabase as any).rpc("verify_school_code", { _code: schoolCode.trim() });
+    if (scErr || !schoolOk) {
+      setLoading(false);
+      toast.error("Invalid school code. Ask the school office for the correct code.");
+      return;
+    }
+    // 2) Verify student code exists
+    const { data: studentOk, error: stErr } = await (supabase as any).rpc("verify_student_code", { _code: studentCode.trim() });
+    if (stErr || !studentOk) {
+      setLoading(false);
+      toast.error("Student code not found. Make sure the school registered you first.");
+      return;
+    }
+
+    // 3) Create the auth account
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: studentEmail,
+      password: studentPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: {
+          full_name: studentName,
+          department: "Student",
+          role: "student",
+        },
+      },
+    });
+    if (error) {
+      setLoading(false);
+      toast.error(error.message);
+      return;
+    }
+
+    // 4) Try to link account to student record (works only after sign-in completes if email confirmation off)
+    if (signUpData.user) {
+      await (supabase as any)
+        .from("students")
+        .update({ user_id: signUpData.user.id })
+        .eq("student_code", studentCode.trim());
+    }
+
+    setLoading(false);
+    toast.success("Student account created. Check your email to confirm, then sign in.");
+  };
+
+
   const tab = params.get("tab") === "signup" ? "signup" : "login";
 
   return (
@@ -106,9 +164,10 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={tab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign up</TabsTrigger>
+              <TabsTrigger value="student">Student</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -172,6 +231,37 @@ const Auth = () => {
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
                   After signup, the Head Master or Secretary will assign your role.
+                </p>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="student">
+              <form onSubmit={handleStudentSignup} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="s-name">Full name</Label>
+                  <Input id="s-name" required value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-school-code">School code</Label>
+                  <Input id="s-school-code" required value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} placeholder="Provided by your school" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-student-code">Your student code</Label>
+                  <Input id="s-student-code" required value={studentCode} onChange={(e) => setStudentCode(e.target.value)} placeholder="e.g. STU001" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-email">Email</Label>
+                  <Input id="s-email" type="email" required value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-password">Password (min 6)</Label>
+                  <Input id="s-password" type="password" minLength={6} required value={studentPassword} onChange={(e) => setStudentPassword(e.target.value)} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Verifying..." : "Create student account"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  We verify both codes against the school records before creating your account.
                 </p>
               </form>
             </TabsContent>
