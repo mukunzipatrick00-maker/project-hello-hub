@@ -27,6 +27,13 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [signupDept, setSignupDept] = useState<string>("");
 
+  // Student signup state
+  const [studentName, setStudentName] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentPassword, setStudentPassword] = useState("");
+  const [studentCode, setStudentCode] = useState("");
+  const [schoolCode, setSchoolCode] = useState("");
+
   useEffect(() => {
     document.title = "Login | School Management System";
     supabase.auth.getSession().then(({ data }) => {
@@ -173,6 +180,37 @@ const Auth = () => {
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
                   After signup, the Head Master or Secretary will assign your role.
+                </p>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="student">
+              <form onSubmit={handleStudentSignup} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="s-name">Full name</Label>
+                  <Input id="s-name" required value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-school-code">School code</Label>
+                  <Input id="s-school-code" required value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} placeholder="Provided by your school" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-student-code">Your student code</Label>
+                  <Input id="s-student-code" required value={studentCode} onChange={(e) => setStudentCode(e.target.value)} placeholder="e.g. STU001" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-email">Email</Label>
+                  <Input id="s-email" type="email" required value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="s-password">Password (min 6)</Label>
+                  <Input id="s-password" type="password" minLength={6} required value={studentPassword} onChange={(e) => setStudentPassword(e.target.value)} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Verifying..." : "Create student account"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  We verify both codes against the school records before creating your account.
                 </p>
               </form>
             </TabsContent>
