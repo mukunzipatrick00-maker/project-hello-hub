@@ -165,6 +165,33 @@ export type Database = {
         }
         Relationships: []
       }
+      school_settings: {
+        Row: {
+          created_at: string
+          id: string
+          school_code: string
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_code: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_code?: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           class_name: string
@@ -279,6 +306,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_school_code: { Args: { _code: string }; Returns: boolean }
+      verify_student_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       app_role:
