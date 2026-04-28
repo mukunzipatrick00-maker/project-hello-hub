@@ -43,12 +43,8 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginDept) {
-      toast.error("Please select your department");
-      return;
-    }
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
     });
@@ -57,20 +53,6 @@ const Auth = () => {
       setLoading(false);
       return;
     }
-    // Verify department matches profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("department")
-      .eq("id", data.user!.id)
-      .maybeSingle();
-
-    if (profile?.department && profile.department !== loginDept) {
-      await supabase.auth.signOut();
-      toast.error(`Wrong department. Your account is in "${profile.department}".`);
-      setLoading(false);
-      return;
-    }
-
     toast.success("Welcome back!");
     navigate("/dashboard", { replace: true });
   };
@@ -172,17 +154,6 @@ const Auth = () => {
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Department</Label>
-                  <Select value={loginDept} onValueChange={setLoginDept}>
-                    <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                    <SelectContent>
-                      {DEPARTMENTS.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input id="login-email" type="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
