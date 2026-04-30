@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, ROLE_LABELS, hasAnyRole } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut, BookOpen, FileText, Briefcase, Settings, Library } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut, BookOpen, FileText, Briefcase, Settings, Library, UserCheck } from "lucide-react";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -15,8 +15,11 @@ const DashboardLayout = () => {
 
   const isStaff = hasAnyRole(roles, "head_master", "secretary", "teacher", "animation_patron", "matron");
   const canManageStudents = hasAnyRole(roles, "head_master", "secretary");
+  const canViewStudents = hasAnyRole(roles, "head_master", "secretary", "teacher");
   const canEnterMarks = hasAnyRole(roles, "head_master", "secretary", "teacher");
   const canManageStaff = hasAnyRole(roles, "head_master", "secretary");
+  const canSeeReports = hasAnyRole(roles, "head_master", "secretary");
+  const canAssignTeachers = hasAnyRole(roles, "head_master", "secretary");
   const isStudent = hasAnyRole(roles, "student");
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -47,7 +50,7 @@ const DashboardLayout = () => {
               <ClipboardList size={16} /> Marks
             </NavLink>
           )}
-          {canManageStudents && (
+          {canViewStudents && (
             <NavLink to="/dashboard/students" className={linkCls}>
               <GraduationCap size={16} /> Students
             </NavLink>
@@ -67,7 +70,12 @@ const DashboardLayout = () => {
               <Library size={16} /> Subjects
             </NavLink>
           )}
-          {isStaff && (
+          {canAssignTeachers && (
+            <NavLink to="/dashboard/teacher-subjects" className={linkCls}>
+              <UserCheck size={16} /> Teacher Assignments
+            </NavLink>
+          )}
+          {canSeeReports && (
             <NavLink to="/dashboard/reports" className={linkCls}>
               <FileText size={16} /> Reports
             </NavLink>
