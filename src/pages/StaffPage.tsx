@@ -99,6 +99,7 @@ const StaffPage = () => {
                 <TableHead>Phone</TableHead>
                 <TableHead>Roles</TableHead>
                 <TableHead>Assign role</TableHead>
+                {canDelete && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
