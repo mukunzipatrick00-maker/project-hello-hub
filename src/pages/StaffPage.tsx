@@ -19,6 +19,8 @@ type StaffRow = {
 const ALL_ROLES: AppRole[] = ["head_master", "secretary", "teacher", "animation_patron", "matron", "student"];
 
 const StaffPage = () => {
+  const { user, roles } = useAuth();
+  const canDelete = hasAnyRole(roles, "head_master");
   const [rows, setRows] = useState<StaffRow[]>([]);
   const [adding, setAdding] = useState<Record<string, AppRole | "">>({});
 
