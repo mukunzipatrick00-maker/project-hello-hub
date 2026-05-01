@@ -69,6 +69,16 @@ const StaffPage = () => {
     load();
   };
 
+  const deleteUser = async (r: StaffRow) => {
+    if (r.id === user?.id) return toast.error("You cannot delete your own account");
+    if (!confirm(`Permanently delete ${r.full_name}? This removes their account, profile, and roles. This cannot be undone.`)) return;
+    const { data, error } = await supabase.functions.invoke("delete-user", { body: { user_id: r.id } });
+    if (error) return toast.error(error.message);
+    if ((data as any)?.error) return toast.error((data as any).error);
+    toast.success("User deleted");
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div>
