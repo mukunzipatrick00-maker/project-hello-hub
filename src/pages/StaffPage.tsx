@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ROLE_LABELS, type AppRole } from "@/hooks/useAuth";
+import { ROLE_LABELS, type AppRole, useAuth, hasAnyRole } from "@/hooks/useAuth";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +19,8 @@ type StaffRow = {
 const ALL_ROLES: AppRole[] = ["head_master", "secretary", "teacher", "animation_patron", "matron", "student"];
 
 const StaffPage = () => {
+  const { user, roles } = useAuth();
+  const canDelete = hasAnyRole(roles, "head_master");
   const [rows, setRows] = useState<StaffRow[]>([]);
   const [adding, setAdding] = useState<Record<string, AppRole | "">>({});
 
@@ -66,6 +69,16 @@ const StaffPage = () => {
     load();
   };
 
+  const deleteUser = async (r: StaffRow) => {
+    if (r.id === user?.id) return toast.error("You cannot delete your own account");
+    if (!confirm(`Permanently delete ${r.full_name}? This removes their account, profile, and roles. This cannot be undone.`)) return;
+    const { data, error } = await supabase.functions.invoke("delete-user", { body: { user_id: r.id } });
+    if (error) return toast.error(error.message);
+    if ((data as any)?.error) return toast.error((data as any).error);
+    toast.success("User deleted");
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -86,6 +99,7 @@ const StaffPage = () => {
                 <TableHead>Phone</TableHead>
                 <TableHead>Roles</TableHead>
                 <TableHead>Assign role</TableHead>
+                {canDelete && <TableHead className="w-12"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,6 +136,19 @@ const StaffPage = () => {
                       <Button size="sm" onClick={() => assignRole(r.id)} disabled={!adding[r.id]}>Add</Button>
                     </div>
                   </TableCell>
+                  {canDelete && (
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteUser(r)}
+                        disabled={r.id === user?.id}
+                        title={r.id === user?.id ? "You cannot delete yourself" : "Delete user"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
