@@ -136,6 +136,19 @@ const StaffPage = () => {
                       <Button size="sm" onClick={() => assignRole(r.id)} disabled={!adding[r.id]}>Add</Button>
                     </div>
                   </TableCell>
+                  {canDelete && (
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteUser(r)}
+                        disabled={r.id === user?.id}
+                        title={r.id === user?.id ? "You cannot delete yourself" : "Delete user"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
