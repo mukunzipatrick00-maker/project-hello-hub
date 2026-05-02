@@ -17,6 +17,8 @@ import TradesPage from "./pages/TradesPage.tsx";
 import SubjectsPage from "./pages/SubjectsPage.tsx";
 import TeacherSubjectsPage from "./pages/TeacherSubjectsPage.tsx";
 import StudentPortalPage from "./pages/StudentPortalPage.tsx";
+import DisciplinePage from "./pages/DisciplinePage.tsx";
+import PermissionsPage from "./pages/PermissionsPage.tsx";
 import ReportsPage from "./pages/ReportsPage.tsx";
 import SchoolSettingsPage from "./pages/SchoolSettingsPage.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
@@ -49,6 +51,8 @@ const App = () => (
             <Route path="subjects" element={<SubjectsPage />} />
             <Route path="teacher-subjects" element={<TeacherSubjectsPage />} />
             <Route path="my-portal" element={<StudentPortalPage />} />
+            <Route path="discipline" element={<DisciplinePage />} />
+            <Route path="permissions" element={<PermissionsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="settings" element={<SchoolSettingsPage />} />

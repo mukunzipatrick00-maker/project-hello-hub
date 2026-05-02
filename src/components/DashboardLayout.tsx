@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, ROLE_LABELS, hasAnyRole } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut, BookOpen, FileText, Briefcase, Settings, Library, UserCheck, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, ClipboardList, UserCog, LogOut, BookOpen, FileText, Briefcase, Settings, Library, UserCheck, User as UserIcon, ShieldAlert, ClipboardCheck } from "lucide-react";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -15,11 +15,13 @@ const DashboardLayout = () => {
 
   const isStaff = hasAnyRole(roles, "head_master", "secretary", "teacher", "animation_patron", "matron");
   const canManageStudents = hasAnyRole(roles, "head_master", "secretary");
-  const canViewStudents = hasAnyRole(roles, "head_master", "secretary", "teacher");
+  const canViewStudents = hasAnyRole(roles, "head_master", "secretary", "teacher", "animation_patron", "matron");
   const canEnterMarks = hasAnyRole(roles, "head_master", "secretary", "teacher");
+  const canSeeMarksAndSubjects = hasAnyRole(roles, "head_master", "secretary", "teacher");
   const canManageStaff = hasAnyRole(roles, "head_master", "secretary");
   const canSeeReports = hasAnyRole(roles, "head_master", "secretary");
   const canAssignTeachers = hasAnyRole(roles, "head_master", "secretary");
+  const canDiscipline = hasAnyRole(roles, "animation_patron", "matron", "head_master", "secretary");
   const isStudent = hasAnyRole(roles, "student");
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -50,9 +52,19 @@ const DashboardLayout = () => {
               <UserIcon size={16} /> My Portal
             </NavLink>
           )}
-          {(isStaff || isStudent) && (
+          {(canSeeMarksAndSubjects || isStudent) && (
             <NavLink to="/dashboard/marks" className={linkCls}>
               <ClipboardList size={16} /> Marks
+            </NavLink>
+          )}
+          {canDiscipline && (
+            <NavLink to="/dashboard/discipline" className={linkCls}>
+              <ShieldAlert size={16} /> Discipline
+            </NavLink>
+          )}
+          {canDiscipline && (
+            <NavLink to="/dashboard/permissions" className={linkCls}>
+              <ClipboardCheck size={16} /> Permissions
             </NavLink>
           )}
           {canViewStudents && (
@@ -70,7 +82,7 @@ const DashboardLayout = () => {
               <Briefcase size={16} /> Trades
             </NavLink>
           )}
-          {(isStaff || isStudent) && (
+          {(canSeeMarksAndSubjects || isStudent) && (
             <NavLink to="/dashboard/subjects" className={linkCls}>
               <Library size={16} /> Subjects
             </NavLink>
