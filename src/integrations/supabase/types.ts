@@ -55,6 +55,47 @@ export type Database = {
           },
         ]
       }
+      discipline_records: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          points: number
+          reason: string
+          recorded_by: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points?: number
+          reason: string
+          recorded_by?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points?: number
+          reason?: string
+          recorded_by?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipline_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marks: {
         Row: {
           created_at: string
@@ -191,6 +232,53 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      student_permissions: {
+        Row: {
+          created_at: string
+          details: string | null
+          end_date: string | null
+          granted_by: string | null
+          id: string
+          reason: string
+          start_date: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          end_date?: string | null
+          granted_by?: string | null
+          id?: string
+          reason: string
+          start_date?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          end_date?: string | null
+          granted_by?: string | null
+          id?: string
+          reason?: string
+          start_date?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_permissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
