@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const BASELINE = 40;
 
 type Student = { id: string; full_name: string; student_code: string; class_name: string };
-type Record = {
+type DisciplineRow = {
   id: string;
   student_id: string;
   reason: string;
@@ -29,7 +29,7 @@ const DisciplinePage = () => {
   const canManage = hasAnyRole(roles, "animation_patron", "matron", "head_master", "secretary");
   const canDelete = hasAnyRole(roles, "animation_patron", "matron", "head_master");
 
-  const [records, setRecords] = useState<Record[]>([]);
+  const [records, setRecords] = useState<DisciplineRow[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ student_id: "", reason: "", points_deducted: "1", notes: "" });
