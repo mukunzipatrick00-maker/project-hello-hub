@@ -61,6 +61,7 @@ export type Database = {
           id: string
           notes: string | null
           points: number
+          points_deducted: number
           reason: string
           recorded_by: string | null
           student_id: string
@@ -71,6 +72,7 @@ export type Database = {
           id?: string
           notes?: string | null
           points?: number
+          points_deducted?: number
           reason: string
           recorded_by?: string | null
           student_id: string
@@ -81,6 +83,7 @@ export type Database = {
           id?: string
           notes?: string | null
           points?: number
+          points_deducted?: number
           reason?: string
           recorded_by?: string | null
           student_id?: string
@@ -482,6 +485,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      student_discipline_remaining: {
+        Args: { _student_id: string }
+        Returns: number
       }
       verify_school_code: { Args: { _code: string }; Returns: boolean }
       verify_student_code: { Args: { _code: string }; Returns: boolean }
