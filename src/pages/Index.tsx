@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GraduationCap } from "lucide-react";
+import studentClass from "@/assets/student-class.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,7 +17,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/20 flex items-center justify-center p-6">
-      <div className="max-w-2xl text-center space-y-6">
+      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-center">
+        <div className="rounded-2xl overflow-hidden shadow-xl border">
+          <img
+            src={studentClass}
+            alt="Rwandan school student writing in class with a pen"
+            width={1920}
+            height={1080}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+        <div className="text-center md:text-left space-y-6">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground">
           <GraduationCap size={32} />
         </div>
@@ -55,9 +66,10 @@ const Index = () => {
           Education is the foundation of Rwanda's transformation. Together — teachers, parents
           and students — we nurture young minds to become the leaders of tomorrow. 🇷🇼
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center md:justify-start">
           <Button asChild size="lg"><Link to="/auth">Login</Link></Button>
           <Button asChild size="lg" variant="outline"><Link to="/auth?tab=signup">Create account</Link></Button>
+        </div>
         </div>
       </div>
     </div>
