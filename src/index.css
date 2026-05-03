@@ -101,14 +101,13 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    background-color: hsl(220 30% 98%);
+    background-color: #ffffff;
     background-image:
-      radial-gradient(circle at 20% 30%, hsl(220 90% 60% / 0.08) 0, transparent 40%),
-      radial-gradient(circle at 80% 70%, hsl(260 80% 60% / 0.08) 0, transparent 45%),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'><path fill='%23e8eaf6' fill-opacity='0.6' d='M0,224L60,213.3C120,203,240,181,360,186.7C480,192,600,224,720,229.3C840,235,960,213,1080,197.3C1200,181,1320,171,1380,165.3L1440,160L1440,320L0,320Z'/></svg>");
-    background-repeat: no-repeat, no-repeat, no-repeat;
-    background-position: top left, top right, bottom center;
-    background-size: auto, auto, 100% auto;
-    background-attachment: fixed;
+      linear-gradient(180deg, #1e6fd9 0%, #2b8cf0 60%, #ffffff 60%, #ffffff 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'><path fill='%23e8eaf6' fill-opacity='0.7' d='M0,224L60,213.3C120,203,240,181,360,186.7C480,192,600,224,720,229.3C840,235,960,213,1080,197.3C1200,181,1320,171,1380,165.3L1440,160L1440,320L0,320Z'/></svg>");
+    background-repeat: no-repeat, no-repeat;
+    background-position: top center, bottom center;
+    background-size: 100% 110px, 100% auto;
+    background-attachment: scroll, fixed;
   }
 }
