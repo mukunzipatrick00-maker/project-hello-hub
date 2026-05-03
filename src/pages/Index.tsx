@@ -66,9 +66,10 @@ const Index = () => {
           Education is the foundation of Rwanda's transformation. Together — teachers, parents
           and students — we nurture young minds to become the leaders of tomorrow. 🇷🇼
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center md:justify-start">
           <Button asChild size="lg"><Link to="/auth">Login</Link></Button>
           <Button asChild size="lg" variant="outline"><Link to="/auth?tab=signup">Create account</Link></Button>
+        </div>
         </div>
       </div>
     </div>
